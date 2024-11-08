@@ -219,7 +219,6 @@ if __name__ == "__main__":
                         format='%(asctime)s - %(levelname)s - %(message)s')
 
     params, file_settings = parse_config(args.config_file)
-    file_settings = [file_settings[2]]
 
     for file_setting in file_settings:
         sftp_upload(params, file_setting)
