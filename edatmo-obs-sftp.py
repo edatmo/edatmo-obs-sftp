@@ -7,7 +7,6 @@ Created on Wed Oct 30 11:19:04 2024
 
 import os
 from glob import glob
-import datetime as dt
 import shutil
 import json
 import argparse
