@@ -3,35 +3,35 @@
     "host": "sshpa.geos.ed.ac.uk",
     "user": "edatmo01",
     "port": 6022,
-    "archive_dir": "/cygdrive/c/users/willm/Desktop/test_archive/",
+    "local_archive_dir": "/cygdrive/c/users/willm/Desktop/test_archive/",
     "remove_empty_local_dirs_older_than_s": 172800
   },
   "file_settings": [
     {
-      "local_base_dir": "c:/Users/willm/Desktop/EM27_test_environment/Public/Documents/EM27/CAMTRACKER/Bilder",
+      "local_base_dir": "/cygdrive/c/Users/willm/Desktop/EM27_test_environment/Public/Documents/EM27/CAMTRACKER/Bilder",
       "file_pattern": "????.??.??_??.??.??_Exp*.JPG",
       "remote_base_dir": "data/EM27/215/Bilder",
       "upload_older_than_s": 0,
-      "archive_older_than_s": 0,
-      "has_subdir": true,
+      "local_archive_older_than_s": 0,
+      "remove_empty_subdirs": true,
       "allow_local_archive": true
     },
     {
-      "local_base_dir": "c:/Users/willm/Desktop/EM27_test_environment/Desktop/IR-data/TEST",
+      "local_base_dir": "/cygdrive/c/Users/willm/Desktop/EM27_test_environment/Desktop/IR-data/TEST",
       "file_pattern": "EM27SUN*_????????.????",
       "remote_base_dir": "data/EM27/215/interferograms/",
       "upload_older_than_s": 720,
-      "archive_older_than_s": 720,
-      "has_subdir": true,
+      "local_archive_older_than_s": 720,
+      "remove_empty_subdirs": true,
       "allow_local_archive": true
     },
     {
-      "local_base_dir": "c:/Users/willm/Desktop/EM27_test_environment/Desktop/enclosure_diagnostics",
+      "local_base_dir": "/cygdrive/c/Users/willm/Desktop/EM27_test_environment/Desktop/enclosure_diagnostics",
       "remote_base_dir": "data/EM27/215/enclosure_diagnostics",
       "file_pattern": "EM27*_????????.dat",
       "upload_older_than_s": 0,
-      "archive_older_than_s": 86400,
-      "has_subdir": false,
+      "local_archive_older_than_s": 86400,
+      "remove_empty_subdirs": false,
       "allow_local_archive": true
     }
   ]

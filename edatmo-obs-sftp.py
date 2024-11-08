@@ -6,13 +6,13 @@ Created on Wed Oct 30 11:19:04 2024
 """
 
 import os
-from glob import glob
 import shutil
 import json
 import argparse
 from dataclasses import dataclass
 import logging
 import time
+from pathlib import Path
 
 
 @dataclass
@@ -20,7 +20,7 @@ class Params:
     host: str
     user: str
     port: int
-    archive_dir: str
+    local_archive_dir: str
     remove_empty_local_dirs_older_than_s: int
 
     def __post_init__(self):
@@ -33,8 +33,8 @@ class Params:
         if not isinstance(self.port, int) or self.port <= 0:
             raise ValueError("port must be a positive integer")
 
-        if not self.archive_dir:
-            raise ValueError("archive_dir cannot be empty")
+        if not self.local_archive_dir:
+            raise ValueError("local_archive_dir cannot be empty")
 
         if not isinstance(self.remove_empty_local_dirs_older_than_s, int) or \
                 self.remove_empty_local_dirs_older_than_s <= 0:
@@ -54,8 +54,8 @@ class FileSettings:
     file_pattern: str
     remote_base_dir: str
     upload_older_than_s: int
-    archive_older_than_s: int
-    has_subdir: bool
+    local_archive_older_than_s: int
+    remove_empty_subdirs: bool
     allow_local_archive: bool
 
     def __post_init__(self):
@@ -78,11 +78,11 @@ class FileSettings:
         if self.upload_older_than_s is not None and self.upload_older_than_s < 0:
             raise ValueError("upload_older_than_s must be non-negative")
 
-        if self.archive_older_than_s is not None and self.archive_older_than_s < 0:
-            raise ValueError("archive_older_than_s must be non-negative")
+        if self.local_archive_older_than_s is not None and self.local_archive_older_than_s < 0:
+            raise ValueError("local_archive_older_than_s must be non-negative")
 
-        if not isinstance(self.has_subdir, bool):
-            raise ValueError("has_subdir must be a boolean")
+        if not isinstance(self.remove_empty_subdirs, bool):
+            raise ValueError("remove_empty_subdirs must be a boolean")
 
         if not isinstance(self.allow_local_archive, bool):
             raise ValueError("allow_local_archive must be a boolean")
@@ -93,6 +93,9 @@ class FileSettings:
         return True
 
     def remove_old_empty_directories_recursive(self, params):
+
+        if not self.remove_empty_subdirs:
+            return
 
         try:
             for entry in os.scandir(self.local_base_dir):
@@ -115,10 +118,10 @@ class FileSettings:
         else:
             return True
 
-    def file_old_enough_for_archive(self, file_path):
+    def file_old_enough_for_local_archive(self, file_path):
         modification_time = _time_since_last_modification_s(file_path)
 
-        if modification_time < self.archive_older_than_s:
+        if modification_time < self.local_archive_older_than_s:
             return False
         else:
             return True
@@ -145,62 +148,60 @@ def _time_since_last_modification_s(file_path):
 
 def sftp_upload(params: Params, file_settings: FileSettings):
 
-    if file_settings.has_subdir:
-        file_settings.remove_old_empty_directories_recursive(params)
-        subdirs = [os.path.basename(d) for d in glob(
-            file_settings.local_base_dir + "/*") if os.path.isdir(d)]
-    else:
-        subdirs = [""]
+    file_settings.remove_old_empty_directories_recursive(params)
 
-    for subdir in subdirs:
-        subdir_fullpath = os.path.join(file_settings.local_base_dir, subdir)
-        subdir_pattern = os.path.join(subdir_fullpath, file_settings.file_pattern)
-        files = glob(subdir_pattern)
+    files = [i for i in Path(file_settings.local_base_dir).rglob(
+        file_settings.file_pattern)]
 
-        if not files:
-            logging.info(f"No files found in {subdir_pattern}")
+    if not files:
+        logging.info(f"No files found in {file_settings.local_base_dir} with pattern "
+                     f"{file_settings.file_pattern}")
+        return
+
+    cmd_mkdir_log = []  # keep track of what directories have been created already
+
+    for file in files:
+        logging.debug(f"Evaluating file {file} ...")
+        if not file_setting.file_old_enough_for_upload(file):
             continue
+        relative_path_full = os.path.relpath(file, file_settings.local_base_dir)
+        relative_path_dirnames = os.path.dirname(relative_path_full)
+        relative_path_dirnames_split = os.path.split(relative_path_dirnames)
 
-        if files and file_settings.has_subdir:
-            cmd_mkdir = params.build_mkdir_command(
-                f"{file_settings.remote_base_dir}/{subdir}")
-            logging.info(cmd_mkdir)
-            result = os.system(cmd_mkdir)
-            logging.debug(f"Command {cmd_mkdir} gave exit status: {result}")
+        remote_dir = file_settings.remote_base_dir + "/"
 
-        for file in files:
-            logging.debug(f"Evaluating file {file} ...")
-            if not file_setting.file_old_enough_for_upload(file):
+        for relative_path_dirname in relative_path_dirnames_split:
+            if not relative_path_dirname:
                 continue
+            remote_dir += relative_path_dirname + '/'
+            cmd_mkdir = params.build_mkdir_command(remote_dir)
+            if cmd_mkdir in cmd_mkdir_log:
+                logging.debug(f"{cmd_mkdir} already executed. Skipping.")
+            else:
+                logging.info(cmd_mkdir)
+                result = os.system(cmd_mkdir)
+                logging.debug(f"Command {cmd_mkdir} gave exit status: {result}")
+                cmd_mkdir_log.append(cmd_mkdir)
 
-            if os.path.isdir(file):
-                logging.warning(
-                    f"{file} is a directory. Cannot handle nested directories.")
-                continue
+        cmd_scp = params.build_scp_command(
+            file, f"{file_settings.remote_base_dir}/{relative_path_dirnames}")
+        logging.info(cmd_scp)
+        result = os.system(cmd_scp)
+        logging.debug(f"Command {cmd_scp} gave exit status: {result}")
 
-            file = os.path.normpath(file)
-            cmd_scp = params.build_scp_command(
-                file, f"{file_settings.remote_base_dir}/{subdir}")
-            logging.info(cmd_scp)
-            result = os.system(cmd_scp)
-            logging.debug(f"Command {cmd_scp} gave exit status: {result}")
-
-            if result == 0 and file_setting.file_old_enough_for_archive(file) and \
-                    file_settings.allow_local_archive:
-                logging.debug(
-                    f"Successfully uploaded {file} and the file is old enough to archive")
-                archive_subdir = os.path.basename(file_settings.remote_base_dir)
-                destination_path = os.path.normpath(os.path.join(
-                    params.archive_dir, archive_subdir, subdir))
-                os.makedirs(destination_path, exist_ok=True)
-                destination_path_full = os.path.join(
-                    destination_path, os.path.basename(file))
-                logging.debug(f"Moving {file} to archive {destination_path_full}")
-                try:
-                    shutil.move(file, destination_path_full)
-                except OSError as e:
-                    logging.error(
-                        f"Moving {file} to {destination_path_full} gave error {e}")
+        if result == 0 and file_setting.file_old_enough_for_local_archive(file) and \
+                file_settings.allow_local_archive:
+            logging.debug(f"The successfully uploaded {file} is old enough to archive locally")
+            local_archive_subdir = os.path.basename(file_settings.remote_base_dir)
+            destination_path = os.path.normpath(os.path.join(
+                params.local_archive_dir, local_archive_subdir, relative_path_dirnames))
+            os.makedirs(destination_path, exist_ok=True)
+            destination_path_full = os.path.join(destination_path, os.path.basename(file))
+            logging.debug(f"Moving {file} to local archive {destination_path_full}")
+            try:
+                shutil.move(file, destination_path_full)
+            except OSError as e:
+                logging.error(f"Moving {file} to {destination_path_full} gave error {e}")
 
 
 if __name__ == "__main__":
