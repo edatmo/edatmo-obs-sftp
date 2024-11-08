@@ -124,6 +124,10 @@ class FileSettings:
         else:
             return True
 
+    def get_relative_directory(self, file_path):
+        relative_path_full = os.path.relpath(file_path, self.local_base_dir)
+        return os.path.dirname(relative_path_full)
+
 
 def parse_config(config_file) -> (Params, [FileSettings]):
     with open(config_file, 'r') as f:
@@ -158,9 +162,25 @@ def sftp_upload(params: Params, file_settings: FileSettings):
         subdir_pattern = os.path.join(subdir_fullpath, file_settings.file_pattern)
         files = glob(subdir_pattern)
 
+<<<<<<< Updated upstream
         if not files:
             logging.info(f"No files found in {subdir_pattern}")
             continue
+=======
+    if not files:
+        logging.info(f"No files found in {file_settings.local_base_dir} with pattern "
+                     f"{file_settings.file_pattern}")
+
+    cmd_mkdir_log = []  # keep track of what directories have been created already
+
+    for file in files:
+        logging.debug(f"Evaluating file {file} ...")
+        if not file_setting.file_old_enough_for_upload(file):
+            continue
+
+        relative_path_dirnames = file_settings.get_relative_directory(file)
+        relative_path_dirnames_split = os.path.split(relative_path_dirnames)
+>>>>>>> Stashed changes
 
         if files and file_settings.has_subdir:
             cmd_mkdir = params.build_mkdir_command(
