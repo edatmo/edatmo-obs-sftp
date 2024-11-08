@@ -126,6 +126,10 @@ class FileSettings:
         else:
             return True
 
+    def get_relative_directory(self, file_path):
+        relative_path_full = os.path.relpath(file_path, self.local_base_dir)
+        return os.path.dirname(relative_path_full)
+
 
 def parse_config(config_file) -> (Params, [FileSettings]):
     with open(config_file, 'r') as f:
@@ -164,13 +168,11 @@ def sftp_upload(params: Params, file_settings: FileSettings):
         logging.debug(f"Evaluating file {file} ...")
         if not file_setting.file_old_enough_for_upload(file):
             continue
-        relative_path_full = os.path.relpath(file, file_settings.local_base_dir)
-        relative_path_dirnames = os.path.dirname(relative_path_full)
-        relative_path_dirnames_split = os.path.split(relative_path_dirnames)
+        relative_path_dirnames = relative_path_dirnames = file_settings.get_relative_directory(file)
 
         remote_dir = file_settings.remote_base_dir + "/"
 
-        for relative_path_dirname in relative_path_dirnames_split:
+        for relative_path_dirname in os.path.split(relative_path_dirnames):
             if not relative_path_dirname:
                 continue
             remote_dir += relative_path_dirname + '/'
