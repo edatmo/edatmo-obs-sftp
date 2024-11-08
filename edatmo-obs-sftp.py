@@ -208,7 +208,7 @@ def sftp_upload(params: Params, file_settings: FileSettings):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_file", type=str, default="_config.json",
+    parser.add_argument("--config_file", type=str, default="config.json",
                         help="Path to the configuration file")
     parser.add_argument('--loglevel',
                         default='info',
