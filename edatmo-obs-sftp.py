@@ -157,7 +157,6 @@ def sftp_upload(params: Params, file_settings: FileSettings):
     files = [i for i in Path(file_settings.local_base_dir).rglob(
         file_settings.file_pattern)]
 
-
     if not files:
         logging.info(f"No files found in {file_settings.local_base_dir} with pattern "
                      f"{file_settings.file_pattern}")
@@ -170,10 +169,8 @@ def sftp_upload(params: Params, file_settings: FileSettings):
             continue
 
         relative_path_dirnames = file_settings.get_relative_directory(file)
-        relative_path_dirnames_split = os.path.split(relative_path_dirnames)
 
         remote_dir = file_settings.remote_base_dir + "/"
-
         for relative_path_dirname in os.path.split(relative_path_dirnames):
             if not relative_path_dirname:
                 continue
@@ -196,7 +193,7 @@ def sftp_upload(params: Params, file_settings: FileSettings):
         if result == 0 and file_setting.file_old_enough_for_local_archive(file) and \
                 file_settings.allow_local_archive:
             logging.debug(f"The successfully uploaded {file} is old enough to archive locally")
-            local_archive_subdir = os.path.basename(file_settings.remote_base_dir)
+            local_archive_subdir = os.path.split(file_settings.remote_base_dir)[:-1][0]
             destination_path = os.path.normpath(os.path.join(
                 params.local_archive_dir, local_archive_subdir, relative_path_dirnames))
             os.makedirs(destination_path, exist_ok=True)
@@ -211,7 +208,7 @@ def sftp_upload(params: Params, file_settings: FileSettings):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_file", type=str, default="config.json",
+    parser.add_argument("--config_file", type=str, default="_config.json",
                         help="Path to the configuration file")
     parser.add_argument('--loglevel',
                         default='info',
@@ -222,6 +219,7 @@ if __name__ == "__main__":
                         format='%(asctime)s - %(levelname)s - %(message)s')
 
     params, file_settings = parse_config(args.config_file)
+    file_settings = [file_settings[2]]
 
     for file_setting in file_settings:
         sftp_upload(params, file_setting)
