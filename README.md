@@ -8,22 +8,20 @@ python edatmo-obs-sftp.py --config_file my_config_file.json
 
 ## Setup
 
-If on windows: suggest use mobaxterm or similar tool for executing unix commands (e.g. cygwin)
-
-### Clone the repo
+### 1. Clone the repo
 
 ```
 git clone https://github.com/edatmo/edatmo-obs-sftp
 ```
 
-### Copy the config file
+### 2. Copy the config file
 
 ```
 cp _config.json my_config.json
 ```
 
 
-### Edit the config file
+### 3. Edit the config file
 
 
 ```javascript
@@ -60,4 +58,9 @@ cp _config.json my_config.json
     }
 }
 ```
+
+### Issues/notes
+
+- If on windows: suggest use mobaxterm or similar tool for executing unix commands (e.g. cygwin)
+- If the `remote_base_dir` doesn't exist, the program will fail. Create the `remote_base_dir` manually in advance. 
 
