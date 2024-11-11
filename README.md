@@ -53,7 +53,7 @@ cp _config.json my_config.json
       "local_archive_older_than_s": 0,
 // remove empty subdirectories within local_base_dir? (only if older than remove_empty_local_dirs_older_than_s)
       "remove_empty_subdirs": true,
-// allow the files to be moved to the local archive. If false, then the files will always be re-uploaded . 
+// allow the files to be moved to the local archive. If false, then the files will not be moved out of local_base_dir and will always be re-uploaded
       "allow_local_archive": true
     }
 }
