@@ -62,5 +62,14 @@ cp _config.json my_config.json
 ### Issues/notes
 
 - If on windows: suggest use mobaxterm or similar tool for executing unix commands (e.g. cygwin)
-- If the `remote_base_dir` doesn't exist, the program will fail. Create the `remote_base_dir` manually in advance. 
+- If the `remote_base_dir` doesn't exist on the server, the program will fail. Create the `remote_base_dir` manually in advance:
 
+```
+sftp edatmo01@sshpa.geos.ed.ac.uk
+mkdir your_dir
+mkdir your_dir/your_subdir
+```
+
+If you make subdirectories directly on the remote (and not via sftp as just shown), then make sure the file permissions are correct
+
+- If on windows using mobaxterm, use `/c/cygdrive/` instead of `C:/`, `/d/cycgdrive/` instead of `D:/`, etc. 
