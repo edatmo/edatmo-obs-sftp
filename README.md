@@ -43,7 +43,7 @@ cp _config.json my_config.json
     {
 // the base directory where the files are fouind on the local computer
       "local_base_dir": "/cygdrive/c/Users/willm/Desktop/EM27_test_environment/Public/Documents/EM27/CAMTRACKER/Bilder",
-// files with the followign file pattern will be uploaded
+// files with the following file pattern will be uploaded
       "file_pattern": "????.??.??_??.??.??_Exp*.JPG",
 // files will be uploaded to this remote directory
       "remote_base_dir": "data/EM27/215/Bilder",
