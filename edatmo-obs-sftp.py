@@ -199,10 +199,13 @@ def sftp_upload(params: Params, file_settings: FileSettings):
             os.makedirs(destination_path, exist_ok=True)
             destination_path_full = os.path.join(destination_path, os.path.basename(file))
             logging.debug(f"Moving {file} to local archive {destination_path_full}")
-            try:
-                shutil.move(file, destination_path_full)
-            except OSError as e:
-                logging.error(f"Moving {file} to {destination_path_full} gave error {e}")
+            if not os.path.exists(destination_path_full):
+                try:
+                    shutil.move(file, destination_path_full)
+                except OSError as e:
+                    logging.error(f"Moving {file} to {destination_path_full} gave error {e}")
+            else:
+                logging.debug(f"{destination_path_full} already exists. Not overwriting.")
 
 
 if __name__ == "__main__":
