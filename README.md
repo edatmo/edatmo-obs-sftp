@@ -65,7 +65,7 @@ cp _config.json my_config.json
 - If the `remote_base_dir` doesn't exist on the server, the program will fail. Create the `remote_base_dir` manually in advance:
 
 ```
-sftp edatmo01@sshpa.geos.ed.ac.uk
+sftp -P 6022 edatmo01@sshpa.geos.ed.ac.uk
 mkdir your_dir
 mkdir your_dir/your_subdir
 ```
