@@ -74,3 +74,5 @@ If you make subdirectories directly on the remote (and not via sftp as just show
 
 - If on windows using mobaxterm, use `/c/cygdrive/` instead of `C:/`, `/d/cycgdrive/` instead of `D:/`, etc.
 - If something is not transferring as expected, run in debug mode `python edatmo-obs-sftp.py --config_file my_config_file.json --loglevel debug`
+- On Mobaxterm python, tested with `python --version Python 3.9.16`
+
